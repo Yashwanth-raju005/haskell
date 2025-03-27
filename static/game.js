@@ -1,9 +1,11 @@
 const gridSize = 4;
 let board = [];
+let gameOver = false; // Track game state
 
 // Initialize board
 function initBoard() {
     board = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+    gameOver = false; // Reset game state
     spawnTile();
     spawnTile();
     updateBoard();
@@ -25,6 +27,8 @@ function spawnTile() {
 
 // Move tiles in a direction
 function move(direction) {
+    if (gameOver) return; // Stop moves if the game is over
+
     let moved = false;
     let boardCopy = JSON.stringify(board); // Copy for comparison
 
@@ -80,8 +84,14 @@ function updateBoard() {
             tile.textContent = board[r][c] === 0 ? "" : board[r][c];
             tile.style.background = board[r][c] ? `rgb(${200 - board[r][c] * 5}, 150, 100)` : "#ccc";
             gameBoard.appendChild(tile);
-            if (board[r][c] === 2048) {
-                setTimeout(() => alert("🎉 You Win! Refresh to play again!"), 100);
+            
+            // Stop game if any tile exceeds 2048
+            if (board[r][c] > 2048) {
+                gameOver = true;
+                setTimeout(() => {
+                    alert("🚨 Game Over! Tile exceeded 2048. Restarting...");
+                    initBoard();
+                }, 100);
                 return;
             }
         }
@@ -90,6 +100,8 @@ function updateBoard() {
 
 // Check game over condition
 function checkGameOver() {
+    if (gameOver) return; // If game is already over, stop
+
     for (let r = 0; r < gridSize; r++) {
         for (let c = 0; c < gridSize; c++) {
             if (board[r][c] === 0) return;
@@ -97,11 +109,17 @@ function checkGameOver() {
             if (r < gridSize - 1 && board[r][c] === board[r + 1][c]) return;
         }
     }
-    setTimeout(() => alert("Game Over! Refresh to restart."), 100);
+    gameOver = true;
+    setTimeout(() => {
+        alert("Game Over! No more moves. Restarting...");
+        initBoard();
+    }, 100);
 }
 
 // Handle keypresses
 document.addEventListener("keydown", (e) => {
+    if (gameOver) return; // Ignore key presses if game is over
+
     e.preventDefault(); // Prevent arrow key scrolling
     switch (e.key) {
         case "ArrowUp": move("up"); break;
